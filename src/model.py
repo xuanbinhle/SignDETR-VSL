@@ -3,7 +3,6 @@ from torch import nn
 from torchvision.models import resnet50, ResNet50_Weights
 import sys 
 from colorama import Fore 
-from einops.layers.torch import Rearrange
 from torchinfo import summary
 import sys 
 import math
@@ -47,19 +46,8 @@ def build_2d_sincos_position_embedding(height: int, width: int, dim: int, device
 
 
 class DETR(nn.Module):
-    """
-    Demo DETR implementation.
-
-    Demo implementation of DETR in minimal number of lines, with the
-    following differences wrt DETR in the paper:
-    * learned positional encoding (instead of sine)
-    * positional encoding is passed at input (instead of attention)
-    * fc bbox predictor (instead of MLP)
-    The model achieves ~40 AP on COCO val5k and runs at ~28 FPS on Tesla V100.
-    Only batch size 1 supported.
-    """
     def __init__(self, num_classes, hidden_dim=256, nheads=8,
-                 num_encoder_layers=2, num_decoder_layers=2, num_queries=10):
+                 num_encoder_layers=1, num_decoder_layers=1, num_queries=25):
         super().__init__()
 
         # create ResNet-50 backbone

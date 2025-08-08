@@ -13,4 +13,5 @@ realtimeimage.py
 data/archive
 
 checkpoints
-data
+# data
+.DS_Store
