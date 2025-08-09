@@ -19,7 +19,7 @@ if __name__ == '__main__':
     model = DETR(num_classes=num_classes)
     model.train() 
 
-    opt = optim.Adam(model.parameters(), lr=1e-4)
+    opt = optim.Adam(model.parameters(), lr=1e-3)
     scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, len(train_dataloader)*30, T_mult=2)
 
     matcher = HungarianMatcher(cost_class=1, cost_bbox=5, cost_giou=2)
