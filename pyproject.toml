@@ -9,7 +9,10 @@ dependencies = [
     "colorama>=0.4.6",
     "einops>=0.8.1",
     "label-studio>=1.20.0",
+    "matplotlib>=3.10.5",
+    "torch>=2.8.0",
     "torchinfo>=1.8.0",
+    "torchvision>=0.23.0",
 ]
 
 # pyproject.toml

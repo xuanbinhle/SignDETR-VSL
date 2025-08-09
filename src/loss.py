@@ -245,9 +245,9 @@ class SetCriterion(nn.Module):
         """
         # Check if there are any targets
         if not targets or all(len(t["labels"]) == 0 for t in targets):
-            # Return zero losses or handle appropriately
-            return {loss: torch.tensor(0.0, device=next(iter(outputs.values())).device) 
-                    for loss in self.losses}
+            device = next(iter(outputs.values())).device
+            # Return zeros with the same keys expected by the trainer/weight_dict
+            return {k: torch.tensor(0.0, device=device) for k in self.weight_dict.keys()}
 
         outputs_without_aux = {k: v for k, v in outputs.items()}
 

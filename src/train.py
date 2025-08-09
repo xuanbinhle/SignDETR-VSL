@@ -49,7 +49,9 @@ if __name__ == '__main__':
                 loss_dict = criterion(yhat, y) 
                 # print(Fore.LIGHTBLUE_EX + 'loss calculated' + Fore.RESET) 
                 weight_dict = criterion.weight_dict
-                losses = sum(loss_dict[k] * weight_dict[k] for k in loss_dict.keys() if k in weight_dict)
+                # Ensure we sum exactly over the expected weighted keys, and keep tensor dtype
+                losses = sum((loss_dict.get(k, torch.tensor(0.0, device=yhat_classes.device)) * v)
+                             for k, v in weight_dict.items())
                 
                 # Calculate loss 
                 train_epoch_loss += losses.item() 
@@ -94,7 +96,8 @@ if __name__ == '__main__':
                 yhat = model(X)
                 loss_dict = criterion(yhat, y) 
                 weight_dict = criterion.weight_dict
-                losses = sum(loss_dict[k] * weight_dict[k] for k in loss_dict.keys() if k in weight_dict)
+                losses = sum((loss_dict.get(k, torch.tensor(0.0, device=yhat['pred_logits'].device)) * v)
+                             for k, v in weight_dict.items())
                 
                 # Calculate loss 
                 val_epoch_loss += losses.item() 
