@@ -8,10 +8,10 @@ from utils.boxes import box_cxcywh_to_xyxy, rescale_bboxes
 
 num_classes = 3
 test_dataset = DETRData('data/test', train=False) 
-test_dataloader = DataLoader(test_dataset, batch_size=4, drop_last=True) 
+test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True) 
 model = DETR(num_classes=num_classes)
 model.eval()
-model.load_state_dict(load('checkpoints/301_model.pt'))
+model.load_state_dict(load('checkpoints/1000_model.pt'))
 
 X, y = next(iter(test_dataloader))
 
@@ -22,7 +22,7 @@ result = model(X)
 
 probabilities = result['pred_logits'].softmax(-1)[:,:,:-1] 
 max_probs, max_classes = probabilities.max(-1)
-keep_mask = max_probs > 0.10
+keep_mask = max_probs > 0.85
 batch_indices, query_indices = torch.where(keep_mask) 
 
 bboxes = rescale_bboxes(result['pred_boxes'][batch_indices, query_indices,:], (224,224))

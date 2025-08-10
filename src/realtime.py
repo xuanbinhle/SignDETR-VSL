@@ -16,7 +16,7 @@ transforms = A.Compose(
 
 model = DETR(num_classes=3)
 model.eval()
-model.load_state_dict(load('checkpoints/676_model.pt'))
+model.load_state_dict(load('checkpoints/1000_model.pt'))
 CLASSES = ['hello', 'iloveyou', 'thankyou', 'noclass']     
 
 cap = cv2.VideoCapture(0)
@@ -28,7 +28,7 @@ while cap.isOpened():
 
     probabilities = result['pred_logits'].softmax(-1)[:,:,:-1] 
     max_probs, max_classes = probabilities.max(-1)
-    keep_mask = max_probs > 0.10
+    keep_mask = max_probs > 0.8
 
     batch_indices, query_indices = torch.where(keep_mask) 
 

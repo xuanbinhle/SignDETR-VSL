@@ -15,3 +15,5 @@ data/archive
 checkpoints
 # data
 .DS_Store
+LossAnalysis.ipynb
+.ipynb_checkpoints

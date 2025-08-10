@@ -243,12 +243,6 @@ class SetCriterion(nn.Module):
                      "labels": Tensor of dim [num_target_boxes] containing class labels
                      "boxes": Tensor of dim [num_target_boxes, 4] containing box coordinates
         """
-        # Check if there are any targets
-        if not targets or all(len(t["labels"]) == 0 for t in targets):
-            device = next(iter(outputs.values())).device
-            # Return zeros with the same keys expected by the trainer/weight_dict
-            return {k: torch.tensor(0.0, device=device) for k in self.weight_dict.keys()}
-
         outputs_without_aux = {k: v for k, v in outputs.items()}
 
         # Retrieve the matching between the outputs of the last layer and the targets

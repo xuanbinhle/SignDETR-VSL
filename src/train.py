@@ -17,9 +17,10 @@ if __name__ == '__main__':
 
     num_classes = 3 
     model = DETR(num_classes=num_classes)
+    model.load_state_dict(load('archive/goodcheckpoints/1000_model.pt'))
     model.train() 
 
-    opt = optim.Adam(model.parameters(), lr=1e-3)
+    opt = optim.Adam(model.parameters(), lr=1e-5)
     scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, len(train_dataloader)*30, T_mult=2)
 
     matcher = HungarianMatcher(cost_class=1, cost_bbox=5, cost_giou=2)
@@ -30,7 +31,7 @@ if __name__ == '__main__':
 
     train_batches = len(train_dataloader)
     test_batches = len(test_dataloader)
-    epochs = 1000
+    epochs = 5000
     
     for epoch in range(epochs): 
         # Training phase
