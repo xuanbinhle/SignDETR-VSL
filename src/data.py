@@ -9,6 +9,8 @@ from colorama import Fore
 from matplotlib import pyplot as plt 
 from utils.boxes import rescale_bboxes, stacker
 from utils.setup import get_classes
+from utils.logger import get_logger
+from utils.rich_handlers import DataLoaderHandler
 import sys 
 
 
@@ -20,7 +22,33 @@ class DETRData(Dataset):
         self.images_path = os.path.join(self.path, 'images')
         self.label_files = os.listdir(self.labels_path) 
         self.labels = list(filter(lambda x: x.endswith('.txt'), self.label_files))
-        self.train = train             
+        self.train = train
+        
+        # Initialize logger
+        self.logger = get_logger("data_loader")
+        self.data_handler = DataLoaderHandler()
+        
+        # Log dataset initialization
+        dataset_info = {
+            "Dataset Path": self.path,
+            "Mode": "Training" if train else "Testing",
+            "Total Samples": len(self.labels),
+            "Images Path": self.images_path,
+            "Labels Path": self.labels_path
+        }
+        self.data_handler.log_dataset_stats(dataset_info)
+        
+        # Log transforms information
+        transform_list = [
+            "Resize to 500x500",
+            "Random Crop 224x224 (training only)",
+            "Final Resize to 224x224",
+            "Horizontal Flip p=0.5 (training only)",
+            "Color Jitter (training only)",
+            "Normalize (ImageNet stats)",
+            "Convert to Tensor"
+        ]
+        self.data_handler.log_transform_info(transform_list)             
 
     def safe_transform(self, image, bboxes, labels, max_attempts=50):
         self.transform = A.Compose(

@@ -2,13 +2,19 @@ from data import DETRData
 from model import DETR
 from loss import DETRLoss, HungarianMatcher
 from torch.utils.data import DataLoader 
-from torch import optim, save
+from torch import optim, load, save
 from colorama import Fore  
+from utils.logger import get_logger
+from utils.rich_handlers import TrainingHandler, rich_training_context
 import sys 
 import torch
 from utils.boxes import stacker
 
 if __name__ == '__main__': 
+    # Initialize logger and handlers
+    logger = get_logger("training")
+    logger.print_banner()
+    
     train_dataset = DETRData('data/train') 
     train_dataloader = DataLoader(train_dataset, batch_size=4, collate_fn=stacker, drop_last=True) 
 
@@ -17,7 +23,8 @@ if __name__ == '__main__':
 
     num_classes = 3 
     model = DETR(num_classes=num_classes)
-    model.load_state_dict(load('pretrained/4426_model.pt'))
+    model.load_pretrained('pretrained/4426_model.pt')
+    model.log_model_info()
     model.train() 
 
     opt = optim.Adam(model.parameters(), lr=1e-5)
@@ -31,79 +38,105 @@ if __name__ == '__main__':
     test_batches = len(test_dataloader)
     epochs = 5000
     
-    for epoch in range(epochs): 
-        # Training phase
-        model.train()
-        train_epoch_loss = 0.0 
-        
-        for batch_idx, batch in enumerate(train_dataloader): 
-            X, y = batch
-            try: 
-
-                yhat = model(X) 
-                # print(Fore.LIGHTBLUE_EX + 'predictions made' + Fore.RESET) 
-                yhat_classes = yhat['pred_logits'] 
-                yhat_bb = yhat['pred_boxes'] 
-                # print(Fore.LIGHTBLUE_EX + 'loss calc starting' + Fore.RESET) 
-                loss_dict = criterion(yhat, y) 
-                # print(Fore.LIGHTBLUE_EX + 'loss calculated' + Fore.RESET) 
-                weight_dict = criterion.weight_dict
-                # Ensure we sum exactly over the expected weighted keys, and keep tensor dtype
-                losses = loss_dict['labels']['loss_ce']*weight_dict['class_weighting'] + loss_dict['boxes']['loss_bbox']*weight_dict['bbox_weighting'] + loss_dict['boxes']['loss_giou']*weight_dict['giou_weighting']
+    # Log training configuration
+    training_config = {
+        "Total Epochs": epochs,
+        "Batch Size": 4,
+        "Train Batches": train_batches,
+        "Test Batches": test_batches,
+        "Learning Rate": 1e-5,
+        "Optimizer": "Adam",
+        "Scheduler": "CosineAnnealingWarmRestarts"
+    }
+    logger.print_table("🏋️ Training Configuration", list(training_config.keys()), [list(training_config.values())])
+    
+    # Start training with rich context
+    with rich_training_context() as training_handler:
+        for epoch in range(epochs): 
+            # Training phase
+            model.train()
+            train_epoch_loss = 0.0 
+            
+            # Create progress bar for current epoch
+            with training_handler.create_training_progress() as epoch_progress:
+                epoch_task = epoch_progress.add_task(f"[green]Epoch {epoch+1}/{epochs}", total=train_batches)
                 
-                # Calculate loss 
-                train_epoch_loss += losses.item() 
-                
-                # Zero grads
-                opt.zero_grad()
-                # print(Fore.LIGHTBLUE_EX + 'grads zeroed' + Fore.RESET) 
-                
-                # Backward
-                losses.backward()
-                # print(Fore.LIGHTBLUE_EX + 'grads calculated' + Fore.RESET) 
-                # Apply
-                opt.step()
-                # print(Fore.LIGHTBLUE_EX + 'grads applied' + Fore.RESET) 
-                
-                
-            except Exception as e: 
-                print(Fore.LIGHTYELLOW_EX + str(e) + Fore.RESET) 
-                print(Fore.LIGHTRED_EX + str(y) + Fore.RESET) 
-                sys.exit()
-
-            # Fancy progress bar
-            progress = (batch_idx + 1) / train_batches
-            bar_length = 30
-            filled_length = int(bar_length * progress)
-            bar = "█" * filled_length + "-" * (bar_length - filled_length)
-            print(
-                f"\rEpoch {epoch+1}/{epochs} [{bar}] {batch_idx+1}/{train_batches} batches",
-                end="",
+                for batch_idx, batch in enumerate(train_dataloader): 
+                    X, y = batch
+                    try: 
+                        yhat = model(X) 
+                        yhat_classes = yhat['pred_logits'] 
+                        yhat_bb = yhat['pred_boxes'] 
+                        loss_dict = criterion(yhat, y) 
+                        weight_dict = criterion.weight_dict
+                        
+                        # Ensure we sum exactly over the expected weighted keys, and keep tensor dtype
+                        losses = loss_dict['labels']['loss_ce']*weight_dict['class_weighting'] + loss_dict['boxes']['loss_bbox']*weight_dict['bbox_weighting'] + loss_dict['boxes']['loss_giou']*weight_dict['giou_weighting']
+                        
+                        # Calculate loss 
+                        train_epoch_loss += losses.item() 
+                        
+                        # Zero grads
+                        opt.zero_grad()
+                        
+                        # Backward
+                        losses.backward()
+                        # Apply
+                        opt.step()
+                        
+                        # Update progress
+                        epoch_progress.update(epoch_task, advance=1)
+                        
+                        # Log detailed loss components every 10 batches
+                        if batch_idx % 10 == 0:
+                            loss_components = {
+                                'Total Loss': losses.item(),
+                                'Classification Loss': loss_dict['labels']['loss_ce'].item(),
+                                'BBox Loss': loss_dict['boxes']['loss_bbox'].item(),
+                                'GIoU Loss': loss_dict['boxes']['loss_giou'].item()
+                            }
+                            training_handler.log_loss_components(loss_components, epoch, batch_idx)
+                        
+                    except Exception as e: 
+                        logger.error(f"Training error at epoch {epoch}, batch {batch_idx}: {str(e)}")
+                        logger.error(f"Batch targets: {str(y)}")
+                        sys.exit()
+            
+            # Progress lr 
+            scheduler.step()
+            
+            # Validation phase
+            model.eval()
+            val_epoch_loss = 0.0
+            with torch.no_grad():
+                with training_handler.create_training_progress() as val_progress:
+                    val_task = val_progress.add_task("[yellow]Validation", total=test_batches)
+                    
+                    for batch_idx, batch in enumerate(test_dataloader):
+                        X, y = batch
+                        yhat = model(X)
+                        loss_dict = criterion(yhat, y) 
+                        weight_dict = criterion.weight_dict
+                        losses = loss_dict['labels']['loss_ce']*weight_dict['class_weighting'] + loss_dict['boxes']['loss_bbox']*weight_dict['bbox_weighting'] + loss_dict['boxes']['loss_giou']*weight_dict['giou_weighting']
+                        
+                        # Calculate loss 
+                        val_epoch_loss += losses.item() 
+                        val_progress.update(val_task, advance=1)
+            
+            # Log epoch metrics
+            current_lr = scheduler.get_last_lr()[0]
+            training_handler.update_epoch_metrics(
+                epoch=epoch + 1,
+                train_loss=train_epoch_loss/train_batches,
+                test_loss=val_epoch_loss/test_batches,
+                lr=current_lr
             )
-        
-        # Progress lr 
-        scheduler.step()
-        print(f" - Train Loss: {train_epoch_loss/train_batches:.4f}", end="")
-
-        # Validation phase
-        model.eval()
-        val_epoch_loss = 0.0
-        with torch.no_grad():
-            for batch_idx, batch in enumerate(test_dataloader):
-                X, y = batch
-                yhat = model(X)
-                loss_dict = criterion(yhat, y) 
-                weight_dict = criterion.weight_dict
-                losses = loss_dict['labels']['loss_ce']*weight_dict['class_weighting'] + loss_dict['boxes']['loss_bbox']*weight_dict['bbox_weighting'] + loss_dict['boxes']['loss_giou']*weight_dict['giou_weighting']
-                
-                # Calculate loss 
-                val_epoch_loss += losses.item() 
-                
-        print(f" - Test Loss: {val_epoch_loss/test_batches:.4f}")
-        
-        # Save checkpoints
-        if epoch % 25 == 0:
-            save(model.state_dict(), f"checkpoints/{epoch+1}_model.pt")
+            
+            # Save checkpoints
+            if epoch % 25 == 0:
+                checkpoint_path = f"checkpoints/{epoch+1}_model.pt"
+                save(model.state_dict(), checkpoint_path)
+                training_handler.save_checkpoint_status(checkpoint_path, epoch + 1)
             
     # Final save
     save(model.state_dict(), f"checkpoints/{epoch+1}_model.pt")
