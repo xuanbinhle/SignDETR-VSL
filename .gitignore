@@ -17,4 +17,4 @@ checkpoints
 .DS_Store
 LossAnalysis.ipynb
 .ipynb_checkpoints
-archive/checkpoints_backup
+archive

@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     num_classes = 3 
     model = DETR(num_classes=num_classes)
-    # model.load_state_dict(load('archive/goodcheckpoints/1000_model.pt'))
+    model.load_state_dict(load('pretrained/4426_model.pt'))
     model.train() 
 
     opt = optim.Adam(model.parameters(), lr=1e-5)

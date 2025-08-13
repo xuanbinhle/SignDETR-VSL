@@ -12,7 +12,7 @@ test_dataset = DETRData('data/test', train=False)
 test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True) 
 model = DETR(num_classes=num_classes)
 model.eval()
-model.load_state_dict(load('checkpoints/4426_model.pt'))
+model.load_state_dict(load('pretrained/4426_model.pt'))
 
 X, y = next(iter(test_dataloader))
 

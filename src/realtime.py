@@ -18,7 +18,7 @@ transforms = A.Compose(
 
 model = DETR(num_classes=3)
 model.eval()
-model.load_state_dict(load('checkpoints/4426_model.pt'))
+model.load_state_dict(load('pretrained/4426_model.pt'))
 CLASSES = get_classes() 
 COLORS = get_colors() 
 cap = cv2.VideoCapture(0)
