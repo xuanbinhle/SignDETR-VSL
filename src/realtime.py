@@ -3,8 +3,10 @@ import torch
 from torch import load
 from model import DETR
 import albumentations as A
-from utils.boxes import box_cxcywh_to_xyxy, rescale_bboxes
+from utils.boxes import rescale_bboxes
+from utils.setup import get_classes, get_colors
 import sys 
+
 
 transforms = A.Compose(
         [   
@@ -16,9 +18,9 @@ transforms = A.Compose(
 
 model = DETR(num_classes=3)
 model.eval()
-model.load_state_dict(load('checkpoints/1000_model.pt'))
-CLASSES = ['hello', 'iloveyou', 'thankyou', 'noclass']     
-
+model.load_state_dict(load('checkpoints/4426_model.pt'))
+CLASSES = get_classes() 
+COLORS = get_colors() 
 cap = cv2.VideoCapture(0)
 
 while cap.isOpened(): 
@@ -42,9 +44,10 @@ while cap.isOpened():
         bclass = bclass.detach().numpy()
         bprob = bprob.detach().numpy() 
         x1,y1,x2,y2 = bbox.detach().numpy()
-        frame = cv2.rectangle(frame, (int(x1),int(y1)), (int(x2),int(y2)), (0,0,0), 10)
-        frame = cv2.rectangle(frame, (int(x1),int(y1)-100), (int(x1)+300,int(y1)),(0,0,0), -1)
-        frame = cv2.putText(frame, f"{CLASSES[bclass]} - {round(float(bprob),4)}", (int(x1),int(y1)), cv2.FONT_HERSHEY_DUPLEX, 2, (255,255,255), 4, cv2.LINE_AA)
+        frame = cv2.rectangle(frame, (int(x1),int(y1)), (int(x2),int(y2)), COLORS[bclass], 10)
+        frame_text = f"{CLASSES[bclass]} - {round(float(bprob),4)}"
+        frame = cv2.rectangle(frame, (int(x1),int(y1)-100), (int(x1)+700,int(y1)), COLORS[bclass], -1)
+        frame = cv2.putText(frame, frame_text, (int(x1),int(y1)), cv2.FONT_HERSHEY_DUPLEX, 2, (255,255,255), 4, cv2.LINE_AA)
 
     cv2.imshow('Frame', frame)
 

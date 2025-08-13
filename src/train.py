@@ -1,8 +1,8 @@
 from data import DETRData
 from model import DETR
-from loss import SetCriterion, HungarianMatcher
+from loss import DETRLoss, HungarianMatcher
 from torch.utils.data import DataLoader 
-from torch import nn, optim, load, save
+from torch import optim, save
 from colorama import Fore  
 import sys 
 import torch
@@ -17,17 +17,15 @@ if __name__ == '__main__':
 
     num_classes = 3 
     model = DETR(num_classes=num_classes)
-    model.load_state_dict(load('archive/goodcheckpoints/1000_model.pt'))
+    # model.load_state_dict(load('archive/goodcheckpoints/1000_model.pt'))
     model.train() 
 
     opt = optim.Adam(model.parameters(), lr=1e-5)
     scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, len(train_dataloader)*30, T_mult=2)
 
-    matcher = HungarianMatcher(cost_class=1, cost_bbox=5, cost_giou=2)
-    weight_dict = {'loss_ce': 1, 'loss_bbox': 5, 'loss_giou': 2}
-    losses = ['labels', 'boxes']
-    criterion = SetCriterion(num_classes=num_classes, matcher=matcher, 
-                            weight_dict=weight_dict, eos_coef=0.1, losses=losses)
+    weights= {'class_weighting': 1, 'bbox_weighting': 5, 'giou_weighting': 2}
+    matcher = HungarianMatcher(weights)
+    criterion = DETRLoss(num_classes=num_classes, matcher=matcher, weight_dict=weights, eos_coef=0.1)
 
     train_batches = len(train_dataloader)
     test_batches = len(test_dataloader)
@@ -51,8 +49,7 @@ if __name__ == '__main__':
                 # print(Fore.LIGHTBLUE_EX + 'loss calculated' + Fore.RESET) 
                 weight_dict = criterion.weight_dict
                 # Ensure we sum exactly over the expected weighted keys, and keep tensor dtype
-                losses = sum((loss_dict.get(k, torch.tensor(0.0, device=yhat_classes.device)) * v)
-                             for k, v in weight_dict.items())
+                losses = loss_dict['labels']['loss_ce']*weight_dict['class_weighting'] + loss_dict['boxes']['loss_bbox']*weight_dict['bbox_weighting'] + loss_dict['boxes']['loss_giou']*weight_dict['giou_weighting']
                 
                 # Calculate loss 
                 train_epoch_loss += losses.item() 
@@ -97,8 +94,7 @@ if __name__ == '__main__':
                 yhat = model(X)
                 loss_dict = criterion(yhat, y) 
                 weight_dict = criterion.weight_dict
-                losses = sum((loss_dict.get(k, torch.tensor(0.0, device=yhat['pred_logits'].device)) * v)
-                             for k, v in weight_dict.items())
+                losses = loss_dict['labels']['loss_ce']*weight_dict['class_weighting'] + loss_dict['boxes']['loss_bbox']*weight_dict['bbox_weighting'] + loss_dict['boxes']['loss_giou']*weight_dict['giou_weighting']
                 
                 # Calculate loss 
                 val_epoch_loss += losses.item() 

@@ -1,17 +1,18 @@
 from data import DETRData
 from model import DETR
 import torch
-from torch import nn, optim, load, save
+from torch import load
 from torch.utils.data import DataLoader 
 from matplotlib import pyplot as plt 
-from utils.boxes import box_cxcywh_to_xyxy, rescale_bboxes
+from utils.boxes import rescale_bboxes
+from utils.setup import get_classes
 
 num_classes = 3
 test_dataset = DETRData('data/test', train=False) 
 test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True) 
 model = DETR(num_classes=num_classes)
 model.eval()
-model.load_state_dict(load('checkpoints/1000_model.pt'))
+model.load_state_dict(load('checkpoints/4426_model.pt'))
 
 X, y = next(iter(test_dataloader))
 
@@ -22,7 +23,7 @@ result = model(X)
 
 probabilities = result['pred_logits'].softmax(-1)[:,:,:-1] 
 max_probs, max_classes = probabilities.max(-1)
-keep_mask = max_probs > 0.85
+keep_mask = max_probs > 0.95
 batch_indices, query_indices = torch.where(keep_mask) 
 
 bboxes = rescale_bboxes(result['pred_boxes'][batch_indices, query_indices,:], (224,224))
@@ -33,7 +34,7 @@ print(classes)
 print(probas)
 print(bboxes) 
 
-CLASSES = ['hello', 'iloveyou', 'thankyou', 'noclass']     
+CLASSES = get_classes()
 
 fig, ax = plt.subplots(2,2) 
 axs = ax.flatten()

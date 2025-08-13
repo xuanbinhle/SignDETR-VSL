@@ -8,15 +8,6 @@ import sys
 import math
 
 
-def pos_encoding(seq_length, dim_size):
-    p = torch.zeros((seq_length, dim_size))
-    for k in range(seq_length):
-        for i in range(int(dim_size / 2)):
-            p[k, 2 * i] = torch.sin(torch.tensor(k / (10000 ** (2 * i / dim_size))))
-            p[k, 2 * i + 1] = torch.cos(torch.tensor(k / (10000 ** (2 * i / dim_size))))
-    return p
-
-
 def _get_1d_sincos_pos_embed(length: int, dim: int, temperature: float = 10000.0, device=None):
     assert dim % 2 == 0
     position = torch.arange(length, device=device, dtype=torch.float32).unsqueeze(1)  # (L,1)
@@ -77,7 +68,6 @@ class DETR(nn.Module):
 
     def forward(self, inputs):
         # propagate inputs through ResNet-50 up to avg-pool layer
-        b, c, H_in, W_in = inputs.shape
         x = self.backbone.conv1(inputs)
         x = self.backbone.bn1(x)
         x = self.backbone.relu(x)

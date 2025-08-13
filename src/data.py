@@ -7,8 +7,10 @@ import albumentations as A
 import numpy as np
 from colorama import Fore 
 from matplotlib import pyplot as plt 
-from utils.boxes import box_cxcywh_to_xyxy, rescale_bboxes, stacker
+from utils.boxes import rescale_bboxes, stacker
+from utils.setup import get_classes
 import sys 
+
 
 class DETRData(Dataset): 
     def __init__(self, path, train=True):
@@ -18,7 +20,7 @@ class DETRData(Dataset):
         self.images_path = os.path.join(self.path, 'images')
         self.label_files = os.listdir(self.labels_path) 
         self.labels = list(filter(lambda x: x.endswith('.txt'), self.label_files))
-        self.train = train 
+        self.train = train             
 
     def safe_transform(self, image, bboxes, labels, max_attempts=50):
         self.transform = A.Compose(
@@ -52,11 +54,7 @@ class DETRData(Dataset):
         self.image_name = self.labels[idx].split('.')[0]
         self.image_path = os.path.join(self.images_path, f'{self.image_name}.jpg') 
         
-        # Handle image 
         img = Image.open(self.image_path)
-        
-        # print(img_tensor.shape) 
-        # Handle annotations
         with open(self.label_path, 'r') as f: 
             annotations = f.readlines()
         class_labels = []
@@ -70,25 +68,20 @@ class DETRData(Dataset):
 
         augmented = self.safe_transform(image=np.array(img), bboxes=bounding_boxes, labels=class_labels)
         augmented_img_tensor = augmented['image']
-        augmented_bounding_boxes = augmented['bboxes']
+        augmented_bounding_boxes = np.array(augmented['bboxes'])
         augmented_classes = augmented['class_labels']
 
-        augmented_bounding_boxes = np.array(augmented['bboxes']) 
-
-        # return img_tensor, {'labels':torch.tensor(class_labels), 'boxes': torch.tensor(bounding_boxes, dtype=torch.float32)}
-        labels = torch.tensor(augmented_classes, dtype=torch.long)          # int64 even when empty
-        boxes = torch.tensor(augmented_bounding_boxes, dtype=torch.float32) # (N,4) or (0,4)
+        labels = torch.tensor(augmented_classes, dtype=torch.long)  
+        boxes = torch.tensor(augmented_bounding_boxes, dtype=torch.float32)
         return augmented_img_tensor, {'labels': labels, 'boxes': boxes}
 
 if __name__ == '__main__':
     dataset = DETRData('data/train', train=True) 
-    # rand = np.random.randint(dataset.__len__()) 
-    # X,y = dataset.__getitem__(rand)
-
     dataloader = DataLoader(dataset, collate_fn=stacker, batch_size=4, drop_last=True)
+
     X, y = next(iter(dataloader))
     print(Fore.LIGHTCYAN_EX + str(y) + Fore.RESET) 
-    CLASSES = ['hello', 'iloveyou', 'thankyou', 'noclass']     
+    CLASSES = get_classes() 
     fig, ax = plt.subplots(2,2) 
     axs = ax.flatten()
     for idx, (img, annotations, ax) in enumerate(zip(X, y, axs)): 
