@@ -32,6 +32,7 @@ class CaptureImages():
     def capture(self, class_name: str) -> bool:     
         try: 
             ret, frame = self.cap.read() 
+            raw_frame = frame.copy()
             if not ret:
                 raise Exception("Failed to read from camera")
                 
@@ -41,7 +42,7 @@ class CaptureImages():
             # Generate unique filename
             filename = f'{class_name}-{uuid.uuid1()}.jpg'
             filepath = os.path.join(self.path, filename)
-            cv2.imwrite(filepath, frame)
+            cv2.imwrite(filepath, raw_frame)
             
             if cv2.waitKey(1) & 0xFF==ord('q'):
                 logger.warning("Quit key pressed - stopping capture")
