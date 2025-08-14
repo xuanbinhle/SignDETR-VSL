@@ -159,9 +159,11 @@ class TrainingHandler:
         """Create a specialized progress bar for training."""
         return Progress(
             SpinnerColumn(),
-            TextColumn("[bold blue]Training Progress"),
-            BarColumn(bar_width=None),
+            TextColumn("[bold blue]{task.description}"),
+            BarColumn(bar_width=30),
             MofNCompleteColumn(),
+            TextColumn("[red]Train Loss: {task.fields[train_loss]}"),  # Dynamic loss info
+            TextColumn("[yellow]Test Loss: {task.fields[test_loss]}"),  # Dynamic loss info
             TextColumn("•"),
             TimeElapsedColumn(),
             console=self.console,

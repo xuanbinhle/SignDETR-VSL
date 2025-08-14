@@ -187,11 +187,11 @@ class SignLanguageLogger:
             console=self.console,
         )
 
-    def create_training_progress(self):
+    def create_training_progress(self, loss_string, type='Train'):
         """Create a specialized progress bar for training."""
         return Progress(
             SpinnerColumn(),
-            TextColumn("[bold blue]Training Progress"),
+            TextColumn(f"[bold blue]{type} Progress"),
             BarColumn(bar_width=None),
             MofNCompleteColumn(),
             TextColumn("•"),

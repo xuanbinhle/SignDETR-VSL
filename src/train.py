@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     train_batches = len(train_dataloader)
     test_batches = len(test_dataloader)
-    epochs = 5000
+    epochs = 100
     
     # Log training configuration
     training_config = {
@@ -53,14 +53,13 @@ if __name__ == '__main__':
     # Start training with rich context
     with rich_training_context() as training_handler:
         for epoch in range(epochs): 
-            # Training phase
-            model.train()
-            train_epoch_loss = 0.0 
-            
-            # Create progress bar for current epoch
             with training_handler.create_training_progress() as epoch_progress:
-                epoch_task = epoch_progress.add_task(f"[green]Epoch {epoch+1}/{epochs}", total=train_batches)
-                
+                epoch_task = epoch_progress.add_task(f"[bold blue] Progress {epoch+1}/{epochs}", train_loss=0.0, test_loss=0.0, total=train_batches)
+                # Training phase
+                model.train()
+                train_epoch_loss = 0.0 
+            
+                # Create progress bar for current epoch
                 for batch_idx, batch in enumerate(train_dataloader): 
                     X, y = batch
                     try: 
@@ -85,33 +84,20 @@ if __name__ == '__main__':
                         opt.step()
                         
                         # Update progress
-                        epoch_progress.update(epoch_task, advance=1)
-                        
-                        # Log detailed loss components every 10 batches
-                        if batch_idx % 10 == 0:
-                            loss_components = {
-                                'Total Loss': losses.item(),
-                                'Classification Loss': loss_dict['labels']['loss_ce'].item(),
-                                'BBox Loss': loss_dict['boxes']['loss_bbox'].item(),
-                                'GIoU Loss': loss_dict['boxes']['loss_giou'].item()
-                            }
-                            training_handler.log_loss_components(loss_components, epoch, batch_idx)
+                        epoch_progress.update(epoch_task, advance=1, train_loss=round(train_epoch_loss/train_batches,5))
                         
                     except Exception as e: 
                         logger.error(f"Training error at epoch {epoch}, batch {batch_idx}: {str(e)}")
                         logger.error(f"Batch targets: {str(y)}")
                         sys.exit()
             
-            # Progress lr 
-            scheduler.step()
+                # Progress lr 
+                scheduler.step()
             
-            # Validation phase
-            model.eval()
-            val_epoch_loss = 0.0
-            with torch.no_grad():
-                with training_handler.create_training_progress() as val_progress:
-                    val_task = val_progress.add_task("[yellow]Validation", total=test_batches)
-                    
+                # Test phase
+                model.eval()
+                test_epoch_loss = 0.0
+                with torch.no_grad():
                     for batch_idx, batch in enumerate(test_dataloader):
                         X, y = batch
                         yhat = model(X)
@@ -120,23 +106,14 @@ if __name__ == '__main__':
                         losses = loss_dict['labels']['loss_ce']*weight_dict['class_weighting'] + loss_dict['boxes']['loss_bbox']*weight_dict['bbox_weighting'] + loss_dict['boxes']['loss_giou']*weight_dict['giou_weighting']
                         
                         # Calculate loss 
-                        val_epoch_loss += losses.item() 
-                        val_progress.update(val_task, advance=1)
-            
-            # Log epoch metrics
-            current_lr = scheduler.get_last_lr()[0]
-            training_handler.update_epoch_metrics(
-                epoch=epoch + 1,
-                train_loss=train_epoch_loss/train_batches,
-                test_loss=val_epoch_loss/test_batches,
-                lr=current_lr
-            )
-            
-            # Save checkpoints
-            if epoch % 25 == 0:
-                checkpoint_path = f"checkpoints/{epoch+1}_model.pt"
-                save(model.state_dict(), checkpoint_path)
-                training_handler.save_checkpoint_status(checkpoint_path, epoch + 1)
+                        test_epoch_loss += losses.item() 
+                        epoch_progress.update(epoch_task, advance=0, test_loss=round(test_epoch_loss/test_batches,5))
+                
+                # Save checkpoints
+                if epoch % 10 == 0 and epoch != 0: 
+                    checkpoint_path = f"checkpoints/{epoch}_model.pt"
+                    save(model.state_dict(), checkpoint_path)
+                    training_handler.save_checkpoint_status(checkpoint_path, epoch)
             
     # Final save
-    save(model.state_dict(), f"checkpoints/{epoch+1}_model.pt")
+    save(model.state_dict(), f"checkpoints/{epoch}_model.pt")
