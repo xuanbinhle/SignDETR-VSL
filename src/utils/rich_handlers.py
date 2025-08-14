@@ -154,6 +154,18 @@ class TrainingHandler:
             border_style="green"
         )
         self.console.print(panel)
+    
+    def create_training_progress(self):
+        """Create a specialized progress bar for training."""
+        return Progress(
+            SpinnerColumn(),
+            TextColumn("[bold blue]Training Progress"),
+            BarColumn(bar_width=None),
+            MofNCompleteColumn(),
+            TextColumn("•"),
+            TimeElapsedColumn(),
+            console=self.console,
+        )
 
 
 class ModelHandler:
