@@ -7,7 +7,7 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
+# .venv
 detrtest.py
 realtimeimage.py
 data/archive
