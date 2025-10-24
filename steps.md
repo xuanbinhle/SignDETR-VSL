@@ -1,4 +1,5 @@
 <Hướng dẫn cho việc thu thập và gán nhãn dữ liệu>
+
 0. Tạo môi trường: `python -m venv .venv` và trong terminal chạy các lệnh này: `pip install uv` `uv sync`
 1. Activate môi trường: `.venv\Scripts\Activate.ps1`
 2. Vào src\config.json để ghi các classes cần thu thập dữ liệu.
