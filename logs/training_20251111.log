@@ -1,0 +1,5 @@
+2025-11-11 08:17:22,814 - training - ERROR - [error]Training error at epoch 0, batch 0: autocast.__init__() missing 1 required positional argument: 'device_type'[/error]
+2025-11-11 08:17:22,857 - training - ERROR - [error]Batch targets: [{'labels': tensor([88]), 'boxes': tensor([[0.6946, 0.5000, 0.6108, 1.0000]])}, {'labels': tensor([22]), 'boxes': tensor([[0.5258, 0.7080, 0.3705, 0.4801]])}, {'labels': tensor([117]), 'boxes': tensor([[0.5000, 0.8688, 1.0000, 0.2624]])}, {'labels': tensor([120]), 'boxes': tensor([[0.5676, 0.7540, 0.8649, 0.4781]])}][/error]
+2025-11-11 08:26:46,109 - training - WARNING - [warning]CUDA not available. Training on CPU (this will be very slow).[/warning]
+2025-11-11 08:28:34,199 - training - WARNING - [warning]CUDA not available. Training on CPU.[/warning]
+2025-11-11 08:28:52,431 - training - WARNING - [warning]CUDA not available. Training on CPU.[/warning]

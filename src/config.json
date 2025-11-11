@@ -1,6 +1,22 @@
 {
   "classes": [
-    "a"
+    "A", "B", "C", "D", "E", "G", "H", "I", "K", "L", "M", "N", "O", "P", "Q", 
+    "R", "S", "T", "U", "V", "X", "Y", "0", "1", "10", "12", "2", "23", "3", 
+    "4", "5", "6", "7", "8", "9", "con bò", "con bướm", "con chim", "con chuột", 
+    "con chó", "con chó sói", "con cua", "con cá", "con cá heo", "con cò", 
+    "con công", "con cú mèo", "con dê", "con dế", "con gà", "con gấu", 
+    "con hươu", "con hổ", "con khỉ", "con lợn", "con muỗi", "con mèo", 
+    "con mực", "con ngựa", "con ong", "con ruồi", "con rắn", "con sóc", 
+    "con thỏ", "con trâu", "con trăn", "con tôm", "con voi", "con vẹt", 
+    "con vịt", "con ếch", "con ốc", "Bát", "Ca nô", "Chân", "Cổ", "Dao", 
+    "Giao thông", "Kính", "Lược", "Miệng", "Má", "Máy bay", "Máy giặt", "Mũi", 
+    "Mắt", "Phích", "TV", "Tai", "Thuyền", "Thìa", "Thùng rác", "Tàu hỏa", 
+    "Tóc", "Xe buýt", "Xe máy", "Xe đạp", "Xích lô", "Ô tô", "Đi bộ", 
+    "Điện thoại", "Đèn điện", "Đò", "Đĩa", "Đũa", "Đầu", "Đồng hồ", "Ấm", 
+    "Ba lô", "Cặp sách", "Thước", "Tẩy", "Xẻng hót rác", "Bút bi", "Bút mực", 
+    "Chậu", "Nồi", "Xà phòng", "Chăn", "Chổi", "Cây lau nhà", "Gối", 
+    "Máy vi tính", "Bập bênh", "Cái trống", "Gọt bút chì", "Lọ mực", 
+    "Nồi cơm điện"
   ],
   "colors": [
     [
