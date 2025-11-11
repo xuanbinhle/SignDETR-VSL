@@ -18,9 +18,9 @@ if __name__ == '__main__':
     
     # --- OPTIMIZATION 1: Increase Batch Size & add num_workers ---
     # 8754 train files / batch_size 32 = 273 batches per epoch
-    NEW_BATCH_SIZE = 32
+    NEW_BATCH_SIZE = 16
     # Set num_workers to 4 or 8 to speed up data loading
-    NUM_WORKERS = 4 
+    NUM_WORKERS = 2 
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     use_amp = False # Default to false
