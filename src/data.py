@@ -216,11 +216,13 @@ class DETRData(Dataset):
 
 if __name__ == '__main__':
     # --- IMPORTANT: Update this path to point to your *combineddata* folder ---
-    dataset = DETRData('D:\SignDETR-VSL\combineddata', train=True) 
+    # dataset = DETRData('D:\SignDETR-VSL\combineddata', train=True) 
+    dataset = DETRData('D:\SignDETR-VSL\combineddata\\val', train=False)
+
     
     # Add a custom collate_fn to filter out None values
     def custom_collate(batch):
-        batch = list(filter(lambda x: x is not None, batch))
+        batch = list(filter(lambda x: x is not  None, batch))
         if not batch:
             return None, None # Handle empty batch
         return stacker(batch)

@@ -1,15 +1,17 @@
-git clone repo này
+<Hướng dẫn train mô hình>
 
-tạo .venv
+1. git clone repo này
 
-activate venv
+2. tạo .venv
 
-pip install uv
+3. activate venv
 
-tạo thêm folder checkpoints và combineddata
+4. pip install uv
 
-unzip combineddata.zip rồi lưu folder train, val vô folder combineddata
+5. tạo thêm folder checkpoints và combineddata
 
-chạy lệnh sau để train: uv run src\train.py
+6. unzip combineddata.zip rồi lưu folder train, val vô folder combineddata
+
+7. chạy lệnh sau để train: uv run src\train.py
 
 điều chỉnh batch size trong file train.py nếu vượt quá vram
